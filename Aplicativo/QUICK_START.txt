@@ -1,0 +1,30 @@
+LIXEIRA INTELIGENTE 1.1.1+5 — QUICK START
+==========================================
+
+WINDOWS + ANDROID
+-----------------
+1. Instale Flutter 3.47+ e Android Studio/Android SDK.
+2. Use JDK 17 a 25 (JDK 17 ou 21 recomendado).
+3. Na pasta Aplicativo execute:
+
+   powershell -ExecutionPolicy Bypass -File .\tool\bootstrap_windows.ps1
+
+4. Para também gerar APK debug:
+
+   powershell -ExecutionPolicy Bypass -File .\tool\bootstrap_windows.ps1 -BuildApk
+
+5. Depois conecte um celular Android e execute:
+
+   flutter devices
+   flutter run
+
+O QUE VALIDAR NESTA VERSAO
+--------------------------
+- O app abre diretamente com a identidade visual da Splash.
+- Splash animada permanece visível e depois transita para o HUB.
+- HUB apresenta status e cards animados.
+- Cada leitura abre uma tela dedicada.
+- A câmera da IA não abre automaticamente.
+- O botão "Iniciar análise por câmera" ativa a câmera.
+- HiveMQ é configurado exclusivamente em Configurações.
+- Ícone do launcher é próprio da Lixeira Inteligente.
