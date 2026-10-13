@@ -20,12 +20,12 @@ class MqttSettings {
   String get effectivePublishTopic => sameTopic ? subscribeTopic : publishTopic;
 
   factory MqttSettings.defaults() => const MqttSettings(
-        host: '',
+        host: 'e7c5887cdd5b438d8f9f659b828adef8.s1.eu.hivemq.cloud',
         port: 8883,
-        username: '',
-        subscribeTopic: 'lixeira/telemetry',
-        publishTopic: 'lixeira/command',
-        sameTopic: false,
+        username: 'lixeira_aluno',
+        subscribeTopic: 'lixeira_inteligente',
+        publishTopic: 'lixeira_inteligente',
+        sameTopic: true,
         deviceId: 'LIXEIRA-01',
       );
 

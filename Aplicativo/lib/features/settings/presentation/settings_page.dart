@@ -29,6 +29,16 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  MqttSettings _inputSettings() => MqttSettings(
+        host: host.text.trim(),
+        port: int.tryParse(port.text) ?? 8883,
+        username: user.text.trim(),
+        subscribeTopic: sub.text.trim(),
+        publishTopic: pub.text.trim(),
+        sameTopic: same,
+        deviceId: device.text.trim(),
+      );
+
   @override void dispose() { for (final c in [host, port, user, pass, sub, pub, device]) { c.dispose(); } super.dispose(); }
 
   @override
@@ -82,13 +92,22 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 14),
         FilledButton.icon(onPressed: () async {
           final messenger = ScaffoldMessenger.of(context);
-          final settings = MqttSettings(host: host.text.trim(), port: int.tryParse(port.text) ?? 8883, username: user.text.trim(), subscribeTopic: sub.text.trim(), publishTopic: pub.text.trim(), sameTopic: same, deviceId: device.text.trim());
+          final settings = _inputSettings();
           await c.saveSettings(settings, pass.text);
           if (!mounted) return;
           messenger.showSnackBar(const SnackBar(content: Text('Configurações salvas com segurança.')));
         }, icon: const Icon(Icons.save_rounded), label: const Text('Salvar configurações')),
         const SizedBox(height: 10),
-        OutlinedButton.icon(onPressed: c.busy ? null : (c.mqttConnected ? c.disconnect : c.connect), icon: Icon(c.mqttConnected ? Icons.cloud_off_rounded : Icons.cloud_rounded), label: Text(c.busy ? 'Processando...' : c.mqttConnected ? 'Desconectar do HiveMQ' : 'Conectar ao HiveMQ')),
+        OutlinedButton.icon(onPressed: c.busy ? null : () async {
+          if (c.mqttConnected) {
+            await c.disconnect();
+          } else {
+            // Ao conectar, aplica também os dados editados nos campos MQTT.
+            await c.saveSettings(_inputSettings(), pass.text);
+            if (!mounted) return;
+            await c.connect();
+          }
+        }, icon: Icon(c.mqttConnected ? Icons.cloud_off_rounded : Icons.cloud_rounded), label: Text(c.busy ? 'Processando...' : c.mqttConnected ? 'Desconectar do HiveMQ' : 'Conectar ao HiveMQ')),
         if (c.error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(c.error!, style: const TextStyle(color: AppTheme.coral))),
       ]),
     );

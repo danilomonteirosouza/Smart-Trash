@@ -9,6 +9,12 @@ class SettingsRepository {
   final FlutterSecureStorage secureStorage;
 
   static const _passwordKey = 'mqtt_password';
+  static const _profileKey = 'mqtt_hivemq_profile';
+  static const _profileVersion = 'lixeira_inteligente_2026_10';
+  // Credencial fornecida para a configuração inicial do HiveMQ Cloud.
+  // Após o primeiro uso, o armazenamento da senha fica no secure storage.
+  // Em aplicações distribuídas, recomenda-se trocar essa senha no broker.
+  static const _initialPassword = 'Vilarim/123';
 
   Future<void> ensureSchema() async {
     await database.db.execute("""CREATE TABLE IF NOT EXISTS settings(
@@ -40,13 +46,30 @@ class SettingsRepository {
   Future<(MqttSettings, String)> load() async {
     await ensureSchema();
     final d = MqttSettings.defaults();
+
+    // A atualização do perfil MQTT é executada uma só vez. Ela substitui
+    // os tópicos e credenciais antigos, sem apagar o ID do dispositivo.
+    // Alterações feitas pelo usuário após a migração são preservadas.
+    if (await _get(_profileKey) != _profileVersion) {
+      final existingDeviceId = await _get('deviceId');
+      final settings = d.copyWith(
+        deviceId: existingDeviceId?.trim().isNotEmpty == true
+            ? existingDeviceId
+            : d.deviceId,
+      );
+      await save(settings, _initialPassword);
+      await _put(_profileKey, _profileVersion);
+      return (settings, _initialPassword);
+    }
+
+    final sameTopicValue = await _get('sameTopic');
     final settings = MqttSettings(
       host: await _get('host') ?? d.host,
       port: int.tryParse(await _get('port') ?? '') ?? d.port,
       username: await _get('username') ?? d.username,
       subscribeTopic: await _get('subscribeTopic') ?? d.subscribeTopic,
       publishTopic: await _get('publishTopic') ?? d.publishTopic,
-      sameTopic: (await _get('sameTopic')) == 'true',
+      sameTopic: sameTopicValue == null ? d.sameTopic : sameTopicValue == 'true',
       deviceId: await _get('deviceId') ?? d.deviceId,
     );
     return (settings, await secureStorage.read(key: _passwordKey) ?? '');
