@@ -26,8 +26,8 @@
 // ------------------------------------------------------
 // AJUSTES DO PROJETO
 // ------------------------------------------------------
-static const char *WIFI_SSID = "FamilyLDD";
-static const char *WIFI_PASSWORD = "JOAO0316@@!";
+static const char *WIFI_SSID = "";
+static const char *WIFI_PASSWORD = "";
 
 static const char *MQTT_HOST = "e7c5887cdd5b438d8f9f659b828adef8.s1.eu.hivemq.cloud";
 static const uint16_t MQTT_PORT = 8883;
