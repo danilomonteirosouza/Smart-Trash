@@ -1,0 +1,198 @@
+GUIA DE CONFIGURAÇÃO DA NODEMCU V3 ESP8266 NA ARDUINO IDE
+=======================================================
+
+Placa: NodeMCU V3 ESP8266 / ESP-12E (chip USB-serial CH340)
+Sistema usado no projeto: Windows 10
+IDE usada no projeto: Arduino IDE 1.8.19
+Projeto: Lixeira inteligente — Servo D5 + Wi-Fi + HiveMQ Cloud por MQTT/TLS
+
+IMPORTANTE: esta placa é ESP8266, NÃO é ESP32. Selecione o pacote de placas ESP8266.
+
+1. CONECTAR A PLACA AO COMPUTADOR
+--------------------------------
+1. Conecte a NodeMCU ao computador com um cabo USB de DADOS.
+2. Se possível, conecte a placa a uma porta USB do próprio computador.
+3. Para testar a gravação, desconecte o servomotor e os demais componentes da placa.
+4. Verifique se algum LED da NodeMCU acende.
+
+2. INSTALAR / CONFERIR O DRIVER CH340
+------------------------------------
+Instale o driver CH340
+versão 3.7.2022.01 (o Windows pode exibir 3.7.2022.1).
+
+Para conferir:
+1. Pressione Win + X e abra 'Gerenciador de Dispositivos'.
+2. Expanda 'Portas (COM e LPT)'.
+3. Procure 'USB-SERIAL CH340 (COMx)' — COM3, COM4, COM5 etc.
+4. Clique com o botão direito, selecione 'Propriedades' e abra a aba 'Driver'.
+5. Verifique a versão. Se o driver já funciona, não é necessário substituí-lo.
+6. Se houver erro de abertura/configuração da porta com um driver novo,
+   consulte o procedimento oficial do Arduino para usar a versão 3.7.2022.01:
+   https://support.arduino.cc/hc/en-us/articles/13148652511260-avrdude-ser-open-can-t-set-com-state-for-COMn
+7. Após corrigir o driver, desconecte e reconecte a placa e reabra a Arduino IDE.
+
+NOTA: o número da porta COM pode mudar após reinstalar o driver ou trocar a USB.
+
+3. INSTALAR O SUPORTE ESP8266 NA ARDUINO IDE
+-------------------------------------------
+1. Abra a Arduino IDE.
+2. Acesse 'Arquivo > Preferências'.
+3. No campo 'URLs Adicionais para Gerenciadores de Placas', insira:
+
+   https://arduino.esp8266.com/stable/package_esp8266com_index.json
+
+   Se já houver outra URL, mantenha as existentes e acrescente esta.
+4. Clique em 'OK'.
+5. Acesse 'Ferramentas > Placa > Gerenciador de Placas'.
+6. Pesquise 'esp8266'.
+7. Instale 'esp8266 by ESP8266 Community'.
+   No projeto foi usado o pacote ESP8266 versão 3.1.1.
+8. Aguarde o fim da instalação e feche o Gerenciador de Placas.
+
+Documentação do suporte ESP8266:
+https://arduino-esp8266.readthedocs.io/en/latest/installing.html
+
+4. SELECIONAR A PLACA CORRETA
+----------------------------
+Acesse:
+
+   Ferramentas > Placa > ESP8266 Boards > NodeMCU 1.0 (ESP-12E Module)
+
+Configurações indicadas para o projeto:
+
+   Placa (Board):             NodeMCU 1.0 (ESP-12E Module)
+   CPU Frequency:             80 MHz
+   Upload Speed:              115200
+   Flash Size:                4MB (mantenha a opção padrão compatível)
+   Debug Port:                Disabled
+   Debug Level:               None
+   Porta (Port):              COMx identificada no Gerenciador de Dispositivos
+
+Pode usar Upload Speed 57600 como teste se houver problemas de transmissão.
+A velocidade de upload NÃO precisa ser igual à velocidade do Monitor Serial.
+
+5. INSTALAR AS BIBLIOTECAS DO PROJETO
+------------------------------------
+Abra 'Sketch > Incluir Biblioteca > Gerenciar Bibliotecas' e instale:
+
+   - PubSubClient, autor Nick O'Leary (no projeto: versão 2.8)
+   - ArduinoJson, autor Benoît Blanchon (usar versão 6.x;
+     por exemplo 6.21.5 ou 6.21.6, compatível com o firmware)
+
+As bibliotecas abaixo vêm no pacote ESP8266 e não requerem instalação avulsa:
+
+   - ESP8266WiFi.h
+   - WiFiClientSecure / BearSSL
+   - Servo.h (versão fornecida pelo pacote ESP8266)
+
+ATENÇÃO: o erro 'ArduinoJson.h: No such file or directory' significa que a
+ArduinoJson não foi instalada ou não foi encontrada pela IDE.
+
+6. ABRIR E CARREGAR O CÓDIGO .INO
+--------------------------------
+1. Abra na Arduino IDE o firmware .ino da lixeira destinado à NodeMCU ESP8266.
+2. Não use o firmware antigo da LILYGO ESP32/A7670E nesta placa.
+3. Confira no firmware os dados da rede Wi-Fi 2,4 GHz (ESP8266 não usa Wi-Fi 5 GHz).
+4. Confira broker HiveMQ, porta 8883, credenciais e certificado CA do projeto.
+   NÃO divulgue as credenciais em capturas de tela ou repositórios públicos.
+5. Selecione 'Ferramentas > Porta > COMx' da NodeMCU.
+6. Clique em 'Verificar' (ícone de visto) para compilar.
+7. Clique em 'Carregar' (ícone de seta) para gravar o código.
+8. Aguarde o fim do envio; a IDE não deve mostrar erro de gravação.
+
+Se ocorrer erro de porta, confirme o driver CH340, a COM atual e se o Monitor
+Serial ou outro programa está ocupando a porta. Teste outro cabo USB de dados.
+
+7. ABRIR O MONITOR SERIAL E VER OS LOGS
+--------------------------------------
+1. Acesse 'Ferramentas > Monitor Serial'.
+2. No canto inferior direito, selecione '115200 baud' (valor usado no firmware
+   com logs do projeto; confira Serial.begin(...) caso use outro firmware).
+3. Pressione RST na placa para ver a inicialização desde o início.
+4. Procure mensagens de:
+
+   [BOOT]   Inicialização
+   [WIFI]   Rede conectada e endereço IP
+   [NTP]    Hora sincronizada
+   [DNS]    Endereço do HiveMQ resolvido
+   [TLS]    Conexão criptografada
+   [MQTT]   Autenticação e inscrição no tópico
+   [JSON]   Comando interpretado
+   [SERVO]  Ângulo enviado ao motor
+   [ACK]    Resposta publicada no broker
+   [STATUS] Diagnóstico periódico
+
+Se a janela estiver vazia, confirme 115200 baud, a porta COM correta e
+pressione RST. Algumas mensagens de boot do ESP8266 podem usar outra velocidade;
+os logs do aplicativo seguem a velocidade configurada em Serial.begin(...).
+
+8. LIGAÇÃO DO SERVOMOTOR (EXEMPLO DE SERVO PEQUENO DE 180 GRAUS)
+---------------------------------------------------------------
+   Fio laranja/amarelo (sinal) -> pino D5 da NodeMCU (GPIO14)
+   Fio marrom/preto (GND)     -> GND da NodeMCU e negativo da fonte
+   Fio vermelho (+)           -> positivo de uma fonte de 5 V adequada ao servo
+
+ATENÇÃO:
+- Use GND comum entre a fonte do servo e a NodeMCU.
+- NÃO ligue o fio vermelho ao pino 3V3.
+- O pino VIN de muitas versões da NodeMCU V3 NÃO é uma saída USB de 5 V confiável.
+- Para um servo pequeno SG90, uma fonte externa de 5 V com corrente suficiente
+  é mais segura que tentar obter toda a corrente da placa.
+- Se usar um servo de 180 graus, não configure ângulos maiores que 180 graus.
+- Os ângulos de abertura e fechamento precisam respeitar o modelo e os limites
+  mecânicos da tampa.
+
+9. TESTAR O MQTT / HIVEMQ CLOUD
+------------------------------
+O projeto usa os comandos de abrir e fechar no tópico:
+
+   lixeira_inteligente
+
+Exemplo para ABRIR:
+{"type":"command","deviceId":"LIXEIRA-01","commandId":"teste-001","action":"open"}
+
+Exemplo para FECHAR:
+{"type":"command","deviceId":"LIXEIRA-01","commandId":"teste-002","action":"close"}
+
+Ao publicar, use 'Retain = false' e um commandId novo em cada comando.
+O firmware publica uma resposta do tipo 'ack', com o mesmo commandId.
+O ACK confirma que o código solicitou o PWM, mas NÃO mede o movimento físico.
+
+10. SOLUÇÕES PARA PROBLEMAS COMUNS
+---------------------------------
+ERRO: 'Erro durante a configuração dos parâmetros da porta serial'
+  -> Conferir driver CH340, com atenção à versão 3.7.2022.01.
+
+ERRO: 'ArduinoJson.h: No such file or directory'
+  -> Instalar ArduinoJson 6.x pelo Gerenciador de Bibliotecas.
+
+ERRO: 'COM não encontrada' ou 'porta ocupada'
+  -> Conferir cabo de dados, porta COM no Windows, Monitor Serial e programas
+     que possam estar usando a porta.
+
+Wi-Fi não conecta:
+  -> Conferir SSID, senha, intensidade do sinal e Wi-Fi 2,4 GHz.
+
+HiveMQ não conecta:
+  -> Conferir Wi-Fi, hora NTP, endereço do broker, porta 8883, usuário, senha,
+     certificado CA e logs TLS/MQTT.
+
+JSON recebido, mas servo não gira:
+  -> Conferir alimentação 5 V, GND comum, fio no D5, ângulo válido, carga
+     mecânica da tampa e registros [SERVO] no Monitor Serial.
+
+11. FONTES ÚTEIS
+----------------
+Instalação do pacote ESP8266:
+https://arduino-esp8266.readthedocs.io/en/latest/installing.html
+
+Driver CH340 e solução de falhas de porta serial (Arduino):
+https://support.arduino.cc/hc/en-us/articles/13148652511260-avrdude-ser-open-can-t-set-com-state-for-COMn
+
+ArduinoJson 6 — instalação:
+https://arduinojson.org/v6/doc/installation/
+
+Arduino IDE:
+https://www.arduino.cc/en/software
+
+FIM DO GUIA
